@@ -1,0 +1,9 @@
+**/.vscode/*
+**/.vs/*
+
+*.gexf
+*.exe
+*.env
+*.txt
+*.png
+*.gephi
