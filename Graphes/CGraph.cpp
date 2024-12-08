@@ -2,6 +2,7 @@
 #include <set>
 #include <fstream>
 #include <iostream>
+#include <vector>
 #include "CNode.cpp"
 #include "CEdge.cpp"
 
@@ -11,6 +12,7 @@ private:
     std::unordered_map<int, CNode> m_nodes;
     std::set<CEdge> m_edges;
     // Note : Unordered_map : hashmap liant les noeuds et leur valeur (recherche plus rapide qu'une liste classique)
+    // Note : Pour 'pair' un élement de m_nodes : pair.first = 'id du noeud', pair.second = 'CNode'
     // Note : Set = liste ordonnée d'objets
 
 public:
@@ -28,8 +30,8 @@ public:
         CEdge edge(node1, node2);
         if (m_edges.find(edge) == m_edges.end()) {
             m_edges.insert(edge);
-            m_nodes[node1].addVoisin(node2);
-            m_nodes[node2].addVoisin(node1);
+            m_nodes[node1].addNeighbor(node2);
+            m_nodes[node2].addNeighbor(node1);
         }
     }
 
@@ -44,11 +46,44 @@ public:
                 }
             }
         }
-        std::cout << nb << " aretes ajout\202es" << std::endl;
+        std::cout << nb << " edges added" << std::endl;
+    }
+
+    // Connexion d'un noeud à un autre qui a la valeur maximale
+    void connectToHighestValue(int node) {
+        int max = -1;
+        srand(time(NULL));
+        std::vector<int> maxNodes;
+        for (const auto& pair : m_nodes) {
+            if (pair.second.getValue() > max) {
+                max = pair.second.getValue();
+                maxNodes.clear();
+                maxNodes.push_back(pair.first);
+            } else if (pair.second.getValue() == max) {
+                maxNodes.push_back(pair.first);
+            }
+        }
+        if (!maxNodes.empty()) {
+            int randomIndex = rand() % maxNodes.size();
+            addEdge(node, maxNodes[randomIndex]);
+        }
+        // Note : On choisit un noeud aléatoire parmi les noeuds de valeur maximale (s'il n'y en a qu'un, il sera forcément choisi)
     }
 
     const std::unordered_map<int, CNode>& getNodes() const { return m_nodes; }
     const std::set<CEdge>& getEdges() const { return m_edges; }
+
+    int getDegree(int id) {
+        return m_nodes[id].getDegree();
+    }
+
+    int getMaxDegree() {
+        int maxDegree = 0;
+        for (const auto& pair : m_nodes) {
+            maxDegree = std::max(maxDegree, pair.second.getDegree());
+        }
+        return maxDegree;
+    }
 
     CNode* getNodeById(int id) {
         auto it = m_nodes.find(id);
@@ -65,6 +100,42 @@ public:
             return const_cast<CEdge*>(&(*it));
         }
         return nullptr;
+    }
+
+    // Récupération de l'ensemble des noeuds connectés à un noeud donné
+    std::unordered_set<int> getConnectedComponent(int id, std::unordered_set<int>& visited) {
+        std::unordered_set<int> component;
+        std::unordered_set<int> toVisit;
+        toVisit.insert(id);
+        while (!toVisit.empty()) {
+            int current = *toVisit.begin();
+            toVisit.erase(toVisit.begin());
+            visited.insert(current);
+            component.insert(current);
+            for (int neighbor : m_nodes[current].getNeighbors()) {
+                if (visited.find(neighbor) == visited.end()) {
+                    toVisit.insert(neighbor);
+                }
+            }
+        }
+        return component;
+    }
+
+    // Récupération du plus grand ensemble de noeuds connectés du graphe
+    std::unordered_set<int> getLargestConnectedComponent() {
+        std::unordered_set<int> visited;
+        std::unordered_set<int> largestComponent;
+        for (const auto& pair : m_nodes) {
+            if (visited.find(pair.first) == visited.end()) {
+                std::unordered_set<int> component = getConnectedComponent(pair.first, visited);
+                // Note : Ici on "demande" à chaque noeud de trouver l'ensemble de ses voisins et de les ajouter à visited si ils ne le sont pas déjà
+                if (component.size() > largestComponent.size()) {
+                    largestComponent = component;
+                }
+            }
+        }
+        return largestComponent;
+        // Note : Sur "largestComponent", il est possible d'effectuer les opérations : largestComponent.size(), largestComponent.find(5), etc.
     }
 
     void exportToGEXF(const std::string& filename) 
@@ -94,7 +165,7 @@ public:
             const CNode& node = pair.second;
             file << "<node id=\"" << node.getId() << "\" label=\"" << node.getId() << "\">\n";
             file << "<attvalues>\n";
-            file << "<attvalue for=\"0\" value=\"" << node.getValeur() << "\"/>\n";
+            file << "<attvalue for=\"0\" value=\"" << node.getValue() << "\"/>\n";
             file << "</attvalues>\n";
             file << "</node>\n";
         }
@@ -118,6 +189,6 @@ public:
 
         file.close();
 
-        std::cout << "Graphe export\202 dans " << filename << std::endl;
+        std::cout << "Graph exported to " << filename << std::endl;
     }
 };

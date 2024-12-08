@@ -10,12 +10,12 @@ int main() {
     // à chaque nouveau lien, la valeur des noeuds est incrémentée de 1
     for (int i = 0; i < 99; i++) {
         graph.addEdge(i, i % 10);
-        graph.getNodeById(i)->setValeur(graph.getNodeById(i)->getValeur() + 1);
-        graph.getNodeById(i % 10)->setValeur(graph.getNodeById(i % 10)->getValeur() + 1);
+        graph.getNodeById(i)->setValue(graph.getNodeById(i)->getValue() + 1);
+        graph.getNodeById(i % 10)->setValue(graph.getNodeById(i % 10)->getValue() + 1);
 
         graph.addEdge(i, i / 10);
-        graph.getNodeById(i)->setValeur(graph.getNodeById(i)->getValeur() + 1);
-        graph.getNodeById(i / 10)->setValeur(graph.getNodeById(i / 10)->getValeur() + 1);
+        graph.getNodeById(i)->setValue(graph.getNodeById(i)->getValue() + 1);
+        graph.getNodeById(i / 10)->setValue(graph.getNodeById(i / 10)->getValue() + 1);
     }
 
     // Exportation dans un format utilisable sur Gephi
