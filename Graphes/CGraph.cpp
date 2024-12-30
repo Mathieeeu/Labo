@@ -33,6 +33,7 @@ public:
             m_nodes[node1].addNeighbor(node2);
             m_nodes[node2].addNeighbor(node1);
         }
+        // Note : node1 et node2 sont les ids des noeuds source et cible
     }
 
     void addRandomEdges(float probability) {
